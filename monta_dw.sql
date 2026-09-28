@@ -258,5 +258,42 @@ LIMIT 10;
 
 --------------------------------------------------------------------
 
+--------------------------------------------------------------------
+-- Inicando a parte OLAP/analítica
+
+--positivos por publisher
+SELECT
+    p.publisher,
+    SUM(f.positive) AS total_positive
+FROM dw.fact_steam f
+JOIN dw.dim_publisher p
+    ON p.publisher_sk = f.publisher_sk
+GROUP BY p.publisher
+ORDER BY total_positive DESC;
+
+--Média por publisher
+SELECT 
+	p.publisher,
+	AVG(f.price) AS preco_medio
+FROM dw.fact_steam f
+LEFT JOIN dw.dim_publisher p
+	ON p.publisher_sk = f.publisher_sk
+GROUP BY publisher
+ORDER BY price DESC;
+
+
+
+SELECT
+	COALESCE(d.year::TEXT, 'TOTAL') AS ano,
+	COUNT(f.date_sk) AS Total_Ano
+FROM dw.fact_steam f
+LEFT JOIN dw.dim_date d
+	ON f.date_sk = d.date_sk
+GROUP BY ROLLUP(d.year)
+ORDER BY d.year DESC; 
+--------------------------------------------------------------------
+
+--------------------------------------------------------------------
+-- Iniciando CUBE
 
 
