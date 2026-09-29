@@ -315,8 +315,124 @@ ORDER BY ano, publisher;
 --------------------------------------------------------------------
 -- Iniciando CURSORES
 
+-- CURSOR VINCULADO:
+-- A consulta SELECT já é definida dentro da declaração (DECLARE) do cursor (ex: DECLARE cur_jogos CURSOR FOR SELECT name FROM dw.dim_jogo;).
 
+-- CURSOR NÃO VINCULADO (UNBOUND):
+-- O cursor é declarado (fora do DECLARE) com SELECT.
+-- A consulta é associada posteriormente no OPEN (ex:OPEN cur_nomes_jogo FOR SELECT name) .
 
+-- com SELECT dentro da OPEN não vinculado; com SELECT dentro da DECLARE vinculado
+
+-- CURSOR não vinculado com query dinâmica
+DO $$
+DECLARE
+	-- 1. Declaração
+	cur_jogos_a_partir_de REFCURSOR;
+
+	v_jogo VARCHAR(300); --recebe jogo
+	v_appid INTEGER := 1000; --valor do filtro (1000)
+	v_nome_tabela VARCHAR(200) := 'dw.dim_jogo'; --tabeal usada na query
+
+BEGIN
+	-- 2. Abertura do cursor
+	OPEN cur_jogoS_a_partir_de FOR EXECUTE -- cursor não vinculado
+	format(
+		'SELECT name FROM %s WHERE appid >= $1',
+		v_nome_tabela
+	)
+	USING v_appid;
+
+	LOOP
+		-- 3. Recuperação dos dados
+		FETCH cur_jogos_a_partir_de INTO v_jogo;
+
+		EXIT WHEN NOT FOUND;
+
+		RAISE NOTICE '%', v_jogo;
+	END LOOP;
+
+	--4. Fechamento do cursor
+	CLOSE cur_jogos_a_partir_de;
+END;
+$$;
+
+-- Na query dinamica $1 representa um parâmetro da query
+-- Diferente do FETCH cur_nomes_a_partir_de INTO v_youtuber; que pega uma linha por vez
+
+-- Cursor VINCULADO 
+DO $$
+DECLARE
+    -- Cursor VINCULADO:
+    -- o SELECT já está definido na declaração
+    cur_jogos CURSOR FOR
+        SELECT name
+        FROM dw.dim_jogo;
+
+    v_jogo VARCHAR(300);
+
+BEGIN
+    -- Abre o cursor
+    OPEN cur_jogos;
+
+    LOOP
+        -- Recupera uma linha
+        FETCH cur_jogos INTO v_jogo;
+
+        EXIT WHEN NOT FOUND;
+
+        RAISE NOTICE '%', v_jogo;
+    END LOOP;
+
+    -- Fecha o cursor
+    CLOSE cur_jogos;
+END;
+$$;
+
+--CURSOR com query não vinculada
+DO $$
+DECLARE
+    -- Cursor NÃO VINCULADO:
+    -- ainda não possui SELECT
+    cur_jogos REFCURSOR;
+
+    v_jogo VARCHAR(300);
+
+BEGIN
+    -- O SELECT só é definido agora
+    OPEN cur_jogos FOR
+        SELECT name
+        FROM dw.dim_jogo;
+
+    LOOP
+        -- Recupera uma linha
+        FETCH cur_jogos INTO v_jogo;
+
+        EXIT WHEN NOT FOUND;
+
+        RAISE NOTICE '%', v_jogo;
+    END LOOP;
+
+    -- Fecha o cursor
+    CLOSE cur_jogos;
+END;
+$$;
+
+--Imagine que um cursor é um funcionário que você manda buscar informações no banco de dados.
+--Cursor vinculado: você contrata o funcionário já com uma função fixa:  
+--“Seu trabalho é sempre buscar os nomes dos jogos.”
+
+--Ele já sabe desde o começo exatamente o que deve buscar. É útil quando a tarefa sempre será a mesma.
+--Cursor não vinculado: você contrata o funcionário, mas só passa a tarefa quando precisar:  
+--“Fica disponível. Quando eu precisar, digo o que você vai buscar.”
+
+--É útil quando você quer mais liberdade para decidir a consulta depois.
+--Query dinâmica: além de passar a tarefa depois, você pode montar a tarefa conforme a situação:  
+--“Hoje quero jogos a partir do ID 1000. Amanhã posso querer outra tabela ou outro filtro.”
+
+--“O cursor vinculado serve para quando eu já sei qual consulta quero percorrer. 
+--O não vinculado serve para quando quero definir essa consulta depois. 
+--E a query dinâmica serve para quando a própria consulta precisa se adaptar durante a execução, como mudar tabela, filtro ou valores.”
 
 
 
