@@ -284,16 +284,39 @@ ORDER BY price DESC;
 
 
 SELECT
-	COALESCE(d.year::TEXT, 'TOTAL') AS ano,
+	COALESCE(d.year::TEXT, 'TOTAL') AS ano, --Adiciona informação para não ficar como NULL quando usamos o ROllUP
 	COUNT(f.date_sk) AS Total_Ano
 FROM dw.fact_steam f
 LEFT JOIN dw.dim_date d
 	ON f.date_sk = d.date_sk
-GROUP BY ROLLUP(d.year)
+GROUP BY ROLLUP(d.year) -- O ROLLUP permite acrescentar níveis de totalização.
 ORDER BY d.year DESC; 
 --------------------------------------------------------------------
 
 --------------------------------------------------------------------
 -- Iniciando CUBE
+SELECT
+    COALESCE(d.year::TEXT, 'TODOS') AS ano, --porque year é numérico e "TODOS" é texto. O ::TEXT transforma o ano em texto para os dois serem compatíveis.
+    COALESCE(p.publisher, 'TODOS') AS publisher, -- Se publisher for NULL, mostre "TODOS".
+    COUNT(f.jogo_sk) AS quantidade_jogos
+FROM dw.fact_steam f
+
+LEFT JOIN dw.dim_date d
+    ON d.date_sk = f.date_sk
+
+LEFT JOIN dw.dim_publisher p
+    ON p.publisher_sk = f.publisher_sk
+
+GROUP BY CUBE(d.year, p.publisher)
+
+ORDER BY ano, publisher;
+--------------------------------------------------------------------
+
+--------------------------------------------------------------------
+-- Iniciando CURSORES
+
+
+
+
 
 
